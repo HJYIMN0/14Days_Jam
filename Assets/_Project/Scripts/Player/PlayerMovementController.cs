@@ -6,6 +6,8 @@ public class PlayerMovementController : MonoBehaviour
     private Vector2 _movementInput;
     private PlayerInputController _inputSystem;
 
+    
+
 
     [SerializeField] private float moveSpeed = 5f;
     public Vector2 GetInputDirection() => _movementInput.normalized;
@@ -18,9 +20,17 @@ public class PlayerMovementController : MonoBehaviour
         _inputSystem = GetComponent<PlayerInputController>();
     }
 
-    private void OnEnable()
+    private void Start()
     {
         _inputSystem.SetPlayerControl(true);
+    }
+
+    private void OnEnable()
+    {
+        if (_inputSystem.isInitialized)
+        {
+            _inputSystem.SetPlayerControl(true);
+        }
     }
 
     private void OnDisable()
