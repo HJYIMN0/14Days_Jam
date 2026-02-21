@@ -3,71 +3,85 @@ using System.Collections;
 
 public class WeaponThrowController : MonoBehaviour
 {
-    [SerializeField] protected PlayerColliderManager _colliderManager;
+    [SerializeField] protected PlayerColliderManager colliderManager;
     [SerializeField] protected PlayerAttackController attackController;
-    [SerializeField] protected WeaponPlayer weapon_player;
-    [SerializeField] private float attackDuration = 0.25f; // Duration for which the weapon collider is active during an attack
+    [SerializeField] protected WeaponPlayer weaponPlayer;
+
+    [SerializeField] private float attackDuration = 0.25f;
+
     public float AttackDuration => attackDuration;
+    [SerializeField] private int damage = 1;
+    public int Damage => damage;
 
     protected Rigidbody2D rb;
-    public void SetColliderActive(bool isActive) => this.gameObject.GetComponent<Collider2D>().enabled = isActive;
-
-    public Collider2D GetCollider() => this.gameObject.GetComponent<Collider2D>();
+    private Collider2D col;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        col = GetComponent<Collider2D>();
     }
 
     private void Start()
     {
-        _colliderManager.OnWeaponPickup += HandleWeaponPickup;
+        colliderManager.OnWeaponPickup += HandleWeaponPickup;
         attackController.OnAttack += HandleAttack;
-        weapon_player.OnWeaponActiveStateChanged += HandleWeaponStatusChange;
+
+        // Stato iniziale coerente
+        bool hasWeapon = attackController.HasWeapon();
+        gameObject.SetActive(!hasWeapon);
     }
 
-    private void HandleWeaponStatusChange(bool isActive)
-    //false = player threw weapon, true = player picked up weapon
+    public virtual void Update()
     {
-        if (!isActive)
+        if (this.gameObject.activeSelf && !col.enabled)
         {
-            this.gameObject.SetActive(true);
-        }
-        else if (isActive && this.gameObject.activeSelf)
-        {
-            this.gameObject.SetActive(false);
+            col.enabled = true;
         }
     }
     private void HandleAttack()
     {
+        // Il player lancia l’arma → disattivo weaponPlayer e attivo questa
+        weaponPlayer.SetWeaponActive(false);
+        gameObject.SetActive(true);
+
         StartCoroutine(AttackCoroutine());
-        SetColliderActive(true); // Enable the collider when the player attacks
     }
 
     private IEnumerator AttackCoroutine()
     {
-        if (!GetCollider().isActiveAndEnabled) GetCollider().enabled = true;
+        col.enabled = true;
+        col.excludeLayers = LayerMask.GetMask("Player");
 
-        GetComponent<Collider2D>().excludeLayers = LayerMask.GetMask("Player"); // Exclude the player layer from the collider
-        yield return new WaitForSeconds(attackDuration); // Wait for the attack duration
-        GetComponent<Collider2D>().excludeLayers = 0; // Reset the excluded layers after the attack
+        yield return new WaitForSeconds(attackDuration);
 
+        col.excludeLayers = 0;
     }
 
     private void HandleWeaponPickup()
     {
-        // Implement logic to handle weapon pickup, e.g., enable weapon visuals, update UI, etc.
-        Debug.Log("Weapon picked up!");
-        SetColliderActive(false); // Disable the collider after picking up the weapon
+        // Il player riprende l’arma
+        weaponPlayer.SetWeaponActive(true);
+        gameObject.SetActive(false);
+        col.enabled = false;
     }
 
     protected virtual void OnEnable()
     {
-        AttackCoroutine();
-        transform.position = attackController.gameObject.transform.position; // Ensure the thrown weapon starts at the player's position
+        transform.position = attackController.transform.position;
+        col.enabled = true;
     }
+
     protected virtual void OnDisable()
     {
-        SetColliderActive(false); // Ensure the collider is disabled when the object is disabled
+        col.enabled = false;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Enemy"))
+        {
+            collision.GetComponent<EnemyHealthManager>()?.TakeDamage(damage);
+        }
     }
 }

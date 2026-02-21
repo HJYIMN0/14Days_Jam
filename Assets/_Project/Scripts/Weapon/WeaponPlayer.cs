@@ -1,41 +1,36 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 public class WeaponPlayer : MonoBehaviour
 {
     [SerializeField] private PlayerAttackController attackController;
     [SerializeField] private Vector3 offset;
-    public Vector3 Offset => offset;
 
     public Action<bool> OnWeaponActiveStateChanged;
-    private void FixedUpdate()
+
+    private void Start()
     {
-        if (attackController.HasWeapon() && this.gameObject.activeSelf)
-        {
-            transform.position = attackController.gameObject.transform.position + offset;
-        }
+        // Allineo lo stato iniziale UNA VOLTA
+        bool hasWeapon = attackController.HasWeapon();
+        gameObject.SetActive(hasWeapon);
+    }
 
-        if (attackController.HasWeapon() && !this.gameObject.activeSelf)
+    private void Update()
+    {
+        // Se l’arma è attiva, segue il player
+        if (gameObject.activeSelf)
         {
-            Debug.LogWarning("Weapon_Player: Update: Player has weapon but Weapon_Player is not active.");
-            this.gameObject.SetActive(true);
-        }
-
-        if (!attackController.HasWeapon() && this.gameObject.activeSelf)
-        {
-            Debug.LogWarning("Weapon_Player: Update: Player does not have weapon but Weapon_Player is active.");
-            this.gameObject.SetActive(false);
+            transform.position = attackController.transform.position + offset;
         }
     }
 
-    private void OnEnable()
+    // Questo metodo verrà chiamato SOLO quando cambia stato arma
+    public void SetWeaponActive(bool isActive)
     {
-        OnWeaponActiveStateChanged?.Invoke(true);
-    }
+        if (gameObject.activeSelf == isActive)
+            return; // Evita chiamate inutili
 
-    private void OnDisable()
-    {
-        OnWeaponActiveStateChanged?.Invoke(false);
+        gameObject.SetActive(isActive);
+        OnWeaponActiveStateChanged?.Invoke(isActive);
     }
 }

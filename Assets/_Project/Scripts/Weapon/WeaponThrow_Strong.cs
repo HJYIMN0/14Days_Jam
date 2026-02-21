@@ -12,7 +12,7 @@ public class WeaponThrow_Strong : WeaponThrowController
         if (rb.linearVelocity.magnitude <= minSpeedToExplode && !HasExploded)
         {
             Explode();
-            HasExploded = true;            
+            HasExploded = true;
         }
     }
     private void Explode()
@@ -23,8 +23,8 @@ public class WeaponThrow_Strong : WeaponThrowController
         {
             if (hitCollider.CompareTag("Enemy") || hitCollider.CompareTag("Player"))
             {
-                // Implement logic to damage the enemy, e.g., hitCollider.GetComponent<EnemyHealth>().TakeDamage(damageAmount);
-                Debug.Log("GameObj hit by explosion: " + hitCollider.name);
+                HealthManager healthManager = hitCollider.GetComponent<HealthManager>();
+                healthManager?.TakeDamage(Damage);
             }
         }
     }

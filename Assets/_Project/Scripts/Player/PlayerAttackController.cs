@@ -11,7 +11,7 @@ public class PlayerAttackController : MonoBehaviour
     [SerializeField] private AttackType rightMouseButtonAttackType = AttackType.Strong;
     [SerializeField] private ForceMode2D attackForceMode_Fast = ForceMode2D.Impulse;
     [SerializeField] private ForceMode2D attackForceMode_Strong = ForceMode2D.Impulse;
-    [SerializeField] private Vector2 standardAttackDirection = Vector2.up;
+    [SerializeField] private AttackDirection standardAttackDirection = AttackDirection.Up;
 
     private PlayerColliderManager _colliderManager;
 
@@ -26,19 +26,24 @@ public class PlayerAttackController : MonoBehaviour
     public bool HasWeapon() => _colliderManager.HasWeapon && weaponPlayer.activeSelf;
     private void Awake()
     {
-        _inputSystem        = GetComponent<PlayerInputController>();
-        _colliderManager    = GetComponent<PlayerColliderManager>();
+        _inputSystem = GetComponent<PlayerInputController>();
+        _colliderManager = GetComponent<PlayerColliderManager>();
         _movementController = GetComponent<PlayerMovementController>();
     }
     private void Start()
     {
         _colliderManager.OnWeaponPickup += () => SetWeapon(true);
         SetWeapon(true);
+        // MODIFICA 1: aggiunta questa riga.
+        // Motivo: SetWeapon(true) attivava il GameObject weaponPlayer ma non
+        // aggiornava _colliderManager.HasWeapon, che rimaneva false (default bool).
+        // CanAttack() controlla entrambi, quindi l'attacco era sempre bloccato.
+        _colliderManager.SetWeapon(true);
     }
 
     public void SetWeapon(bool hasWeapon)
     {
-        if ( hasWeapon &&  weaponPlayer.activeSelf) return;
+        if (hasWeapon && weaponPlayer.activeSelf) return;
         if (!hasWeapon && !weaponPlayer.activeSelf) return;
 
         weaponPlayer.SetActive(hasWeapon);
@@ -62,14 +67,44 @@ public class PlayerAttackController : MonoBehaviour
 
     public bool CanAttack() => _colliderManager.HasWeapon && weaponPlayer.activeSelf;
 
+    private Vector2 CheckStandardAttackDirection(AttackDirection direction)
+    {
+        switch (direction)
+        {
+            case AttackDirection.Up:
+                return Vector2.up;
+
+            case AttackDirection.Down:
+                return Vector2.down;
+
+            case AttackDirection.Left:
+                return Vector2.left;
+
+            case AttackDirection.Right:
+                return Vector2.right;
+
+            default: return Vector2.up;
+        }
+    }
+
     private void Attack(AttackType attackType)
     {
         if (CanAttack())
         {
             weaponPlayer.SetActive(false);
             Vector2 attackDirection = _movementController.GetInputDirection();
-            if (attackDirection == Vector2.zero) attackDirection = standardAttackDirection; // Default attack direction if player is not moving
-            
+            if (attackDirection == Vector2.zero) attackDirection = CheckStandardAttackDirection(standardAttackDirection);
+            // Default attack direction if player is not moving
+
+            // MODIFICA 2: spostato OnAttack?.Invoke() PRIMA di FastAttack/StrongAttack.
+            // Motivo: OnAttack avvia AttackCoroutine in WeaponThrowController, che abilita
+            // il collider. Se la forza veniva applicata prima, l'arma partiva già in volo
+            // con il collider ancora spento, mancando le collisioni (visibile soprattutto
+            // al primo lancio quando l'arma parte da ferma).
+            _colliderManager.StartCoroutine(_colliderManager.AttackCoroutine(attackType));
+            _colliderManager.SetWeapon(false);
+            OnAttack?.Invoke();
+
             switch (attackType)
             {
                 case AttackType.Fast:
@@ -84,11 +119,6 @@ public class PlayerAttackController : MonoBehaviour
                     Debug.LogWarning("Unknown attack type!");
                     break;
             }
-
-            //_colliderManager.AttackCoroutine(attackType);
-            _colliderManager.StartCoroutine(_colliderManager.AttackCoroutine(attackType));
-            _colliderManager.SetWeapon(false);
-            OnAttack?.Invoke();
         }
         else
         {
@@ -112,7 +142,13 @@ public class PlayerAttackController : MonoBehaviour
     }
 }
 
-
+public enum AttackDirection
+{
+    Up,
+    Down,
+    Left,
+    Right
+}
 
 public enum AttackType
 {

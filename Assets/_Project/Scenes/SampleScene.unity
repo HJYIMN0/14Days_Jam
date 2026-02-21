@@ -544,7 +544,7 @@ MonoBehaviour:
   rightMouseButtonAttackType: 1
   attackForceMode_Fast: 1
   attackForceMode_Strong: 1
-  standardAttackDirection: {x: 0, y: 1}
+  standardAttackDirection: 0
 --- !u!114 &413605297
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1513,12 +1513,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6e9ac0bce7efb24c95a4fd406750063, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Weapon_Throw
-  _colliderManager: {fileID: 413605298}
+  colliderManager: {fileID: 413605298}
   attackController: {fileID: 413605296}
-  weapon_player: {fileID: 30396268}
+  weaponPlayer: {fileID: 30396268}
   attackDuration: 0.25
+  damage: 1
   returnSpeed_enemy: 10
   returnSpeed_normal: 10
+  returnSpeed_weakener: 2
   _returnForceMode: 1
 --- !u!114 &968450401
 MonoBehaviour:
@@ -1532,10 +1534,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b85ab9247641152459b543b1bfe6a649, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponThrow_Strong
-  _colliderManager: {fileID: 413605298}
+  colliderManager: {fileID: 413605298}
   attackController: {fileID: 413605296}
-  weapon_player: {fileID: 30396268}
+  weaponPlayer: {fileID: 30396268}
   attackDuration: 0.75
+  damage: 1
   explosionRadius: 2.91
   minSpeedToExplode: 0.5
 --- !u!1 &1064685808
@@ -1686,6 +1689,9 @@ GameObject:
   - component: {fileID: 1076382066}
   - component: {fileID: 1076382065}
   - component: {fileID: 1076382067}
+  - component: {fileID: 1076382068}
+  - component: {fileID: 1076382069}
+  - component: {fileID: 1076382070}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -1760,7 +1766,7 @@ Transform:
   m_GameObject: {fileID: 1076382064}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.54062, y: -2.17768, z: 0}
+  m_LocalPosition: {x: -5.5, y: -2.17768, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1802,6 +1808,61 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
+--- !u!114 &1076382068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076382064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c02355f1d712e143b3b008cb35e017f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Enemy
+  enemySO: {fileID: 11400000, guid: b1aa118e16f19d94a992c074ca64eada, type: 2}
+--- !u!50 &1076382069
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076382064}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
+--- !u!114 &1076382070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1076382064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 996512a92780cce4ab0bbe1179d61a40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHealthManager
+  maxHealth: 1
+  isInvincible: 0
+  hasMaxHpOnStart: 1
 --- !u!1 &1224304755
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,11 +12,12 @@ public class WeaponThrow_Fast : WeaponThrowController
     {
         if (collision.gameObject.CompareTag("Enemy"))
         {
-            rb.AddForce(this.transform.position - attackController.gameObject.transform.position * returnSpeed_enemy, _returnForceMode);
+            rb.AddForce((this.transform.position - attackController.gameObject.transform.position) * returnSpeed_enemy, _returnForceMode);
+            collision.gameObject.GetComponent<HealthManager>()?.TakeDamage(Damage);
         }
         else
         {
-            rb.AddForce(this.transform.position - attackController.gameObject.transform.position * _returnSpeed, _returnForceMode);
+            rb.AddForce((this.transform.position - attackController.gameObject.transform.position) * _returnSpeed, _returnForceMode);
         }
 
         _returnSpeed /= returnSpeed_weakener;
