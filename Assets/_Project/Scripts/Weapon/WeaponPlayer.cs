@@ -1,36 +1,31 @@
-using System;
 using UnityEngine;
 
+/// <summary>
+/// REFACTORING COMPLETO.
+///
+/// PRIMA:
+/// - Aveva OnWeaponActiveStateChanged (Action<bool>) → rimosso, non usato in modo rilevante.
+/// - Aveva SetWeaponActive(bool) con logica di guard → rimosso, WeaponStateManager
+///   gestisce direttamente weaponPlayerObject.SetActive().
+/// - Start() chiamava attackController.HasWeapon() per decidere lo stato iniziale
+///   → rimosso, WeaponStateManager gestisce lo stato iniziale in Awake().
+/// - Referenziava PlayerAttackController solo per usarne il Transform → sostituito
+///   con una diretta referenza al Transform del player, più chiara e meno accoppiata.
+///
+/// ORA:
+/// - Responsabilità unica: seguire la posizione del player con un offset.
+/// - L'attivazione/disattivazione è gestita interamente da WeaponStateManager.
+/// - Zero logica di stato, zero eventi.
+/// </summary>
 public class WeaponPlayer : MonoBehaviour
 {
-    [SerializeField] private PlayerAttackController attackController;
+    // PRIMA: [SerializeField] private PlayerAttackController attackController;
+    // usato SOLO per attackController.transform.position → referenza diretta più pulita.
+    [SerializeField] private Transform playerTransform;
     [SerializeField] private Vector3 offset;
-
-    public Action<bool> OnWeaponActiveStateChanged;
-
-    private void Start()
-    {
-        // Allineo lo stato iniziale UNA VOLTA
-        bool hasWeapon = attackController.HasWeapon();
-        gameObject.SetActive(hasWeapon);
-    }
 
     private void Update()
     {
-        // Se l’arma è attiva, segue il player
-        if (gameObject.activeSelf)
-        {
-            transform.position = attackController.transform.position + offset;
-        }
-    }
-
-    // Questo metodo verrà chiamato SOLO quando cambia stato arma
-    public void SetWeaponActive(bool isActive)
-    {
-        if (gameObject.activeSelf == isActive)
-            return; // Evita chiamate inutili
-
-        gameObject.SetActive(isActive);
-        OnWeaponActiveStateChanged?.Invoke(isActive);
+        transform.position = playerTransform.position + offset;
     }
 }

@@ -3,20 +3,21 @@ using UnityEngine;
 
 public class TimerController : MonoBehaviour
 {
-    [SerializeField] private PlayerColliderManager _colliderManager;
+    [SerializeField] private WeaponStateManager _weaponStateManager;
     [SerializeField] private TextMeshProUGUI _timerText;
     [SerializeField] private float timeLimit = 5f;
+    [SerializeField] private WeaponStateManager weaponStateManager;
 
     private float timer;
     public float TimeRemaining => timer;
 
     private void Start()
     {
-        _colliderManager.OnWeaponPickup += ResetTimer;
+        _weaponStateManager.OnWeaponPickup += ResetTimer;
     }
     private void Update()
     {
-        if (!_colliderManager.HasWeapon)
+        if (!_weaponStateManager.HasWeapon)
         {
             timer -= Time.deltaTime;
             if (timer <= 0)

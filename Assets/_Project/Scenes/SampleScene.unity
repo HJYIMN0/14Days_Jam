@@ -222,7 +222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd268d646101d4d43a57eaa700770ed7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPlayer
-  attackController: {fileID: 413605296}
+  playerTransform: {fileID: 413605294}
   offset: {x: 0, y: 0, z: 0}
 --- !u!1 &320749805
 GameObject:
@@ -339,7 +339,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b49060f9c1944894a9e85378213ab6f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimerController
-  _colliderManager: {fileID: 413605298}
+  _weaponStateManager: {fileID: 413605299}
   _timerText: {fileID: 706410028}
   timeLimit: 5
 --- !u!1 &413605290
@@ -358,6 +358,7 @@ GameObject:
   - component: {fileID: 413605298}
   - component: {fileID: 413605291}
   - component: {fileID: 413605295}
+  - component: {fileID: 413605299}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -536,8 +537,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec0a2240f6dd8c54580aa369835c8a2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttackController
-  weaponThrow: {fileID: 968450395}
-  weaponPlayer: {fileID: 30396262}
+  weaponStateManager: {fileID: 413605299}
+  colliderManager: {fileID: 413605298}
+  weaponThrowObject: {fileID: 968450395}
   attackForce_Fast: 10
   attackForce_Strong: 10
   leftMouseButtonAttackType: 0
@@ -569,8 +571,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bc696445bae4574d9f2628f22a81a69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerColliderManager
-  weaponThrow_Strong: {fileID: 968450401}
+  weaponStateManager: {fileID: 413605299}
   weaponThrow_Fast: {fileID: 968450400}
+  weaponThrow_Strong: {fileID: 968450401}
+--- !u!114 &413605299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 413605290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 402e002defb88084899ac286cdfbfa60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponStateManager
+  weaponPlayerObject: {fileID: 30396262}
+  weaponThrowObject: {fileID: 968450395}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1513,9 +1530,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6e9ac0bce7efb24c95a4fd406750063, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Weapon_Throw
-  colliderManager: {fileID: 413605298}
-  attackController: {fileID: 413605296}
-  weaponPlayer: {fileID: 30396268}
+  playerTransform: {fileID: 413605294}
   attackDuration: 0.25
   damage: 1
   returnSpeed_enemy: 10
@@ -1534,9 +1549,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b85ab9247641152459b543b1bfe6a649, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponThrow_Strong
-  colliderManager: {fileID: 413605298}
-  attackController: {fileID: 413605296}
-  weaponPlayer: {fileID: 30396268}
+  playerTransform: {fileID: 413605294}
   attackDuration: 0.75
   damage: 1
   explosionRadius: 2.91
@@ -1824,6 +1837,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
   enemySO: {fileID: 11400000, guid: b1aa118e16f19d94a992c074ca64eada, type: 2}
+  isIntrestedInPlayer: 0
 --- !u!50 &1076382069
 Rigidbody2D:
   serializedVersion: 5

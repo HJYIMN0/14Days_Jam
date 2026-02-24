@@ -1,10 +1,10 @@
-using System;
 using UnityEngine;
-
 public class PlayerAttackController : MonoBehaviour
 {
-    [SerializeField] private GameObject weaponThrow;
-    [SerializeField] private GameObject weaponPlayer;
+    [SerializeField] private WeaponStateManager weaponStateManager;
+    [SerializeField] private PlayerColliderManager colliderManager;
+    [SerializeField] private GameObject weaponThrowObject;
+
     [SerializeField] private float attackForce_Fast = 10f;
     [SerializeField] private float attackForce_Strong = 10f;
     [SerializeField] private AttackType leftMouseButtonAttackType = AttackType.Fast;
@@ -13,145 +13,108 @@ public class PlayerAttackController : MonoBehaviour
     [SerializeField] private ForceMode2D attackForceMode_Strong = ForceMode2D.Impulse;
     [SerializeField] private AttackDirection standardAttackDirection = AttackDirection.Up;
 
-    private PlayerColliderManager _colliderManager;
 
-    private WeaponThrow_Strong weaponThrow_Strong => weaponThrow.GetComponent<WeaponThrow_Strong>();
-    private WeaponThrow_Fast weaponThrow_Fast => weaponThrow.GetComponent<WeaponThrow_Fast>();
+    private WeaponThrow_Strong _weaponThrow_Strong;
+    private WeaponThrow_Fast _weaponThrow_Fast;
+    private Rigidbody2D _weaponRb;
 
     private PlayerInputController _inputSystem;
     private PlayerMovementController _movementController;
 
-    public Action OnAttack;
-
-    public bool HasWeapon() => _colliderManager.HasWeapon && weaponPlayer.activeSelf;
     private void Awake()
     {
         _inputSystem = GetComponent<PlayerInputController>();
-        _colliderManager = GetComponent<PlayerColliderManager>();
         _movementController = GetComponent<PlayerMovementController>();
-    }
-    private void Start()
-    {
-        _colliderManager.OnWeaponPickup += () => SetWeapon(true);
-        SetWeapon(true);
-        // MODIFICA 1: aggiunta questa riga.
-        // Motivo: SetWeapon(true) attivava il GameObject weaponPlayer ma non
-        // aggiornava _colliderManager.HasWeapon, che rimaneva false (default bool).
-        // CanAttack() controlla entrambi, quindi l'attacco era sempre bloccato.
-        _colliderManager.SetWeapon(true);
-    }
 
-    public void SetWeapon(bool hasWeapon)
-    {
-        if (hasWeapon && weaponPlayer.activeSelf) return;
-        if (!hasWeapon && !weaponPlayer.activeSelf) return;
-
-        weaponPlayer.SetActive(hasWeapon);
-        weaponThrow.SetActive(!hasWeapon);
+        _weaponThrow_Strong = weaponThrowObject.GetComponent<WeaponThrow_Strong>();
+        _weaponThrow_Fast = weaponThrowObject.GetComponent<WeaponThrow_Fast>();
+        _weaponRb = weaponThrowObject.GetComponent<Rigidbody2D>();
     }
+    public bool HasWeapon() => weaponStateManager.HasWeapon;
+    public bool CanAttack() => weaponStateManager.HasWeapon;
 
     private void Update()
     {
-        if (_inputSystem.IsPlayerControlEnabled())
-        {
-            if (_inputSystem.InputSystem.Player.FastAttack.triggered)
-            {
-                Attack(leftMouseButtonAttackType);
-            }
-            if (_inputSystem.InputSystem.Player.StrongAttack.triggered)
-            {
-                Attack(rightMouseButtonAttackType);
-            }
-        }
+        if (!_inputSystem.IsPlayerControlEnabled()) return;
+
+        if (_inputSystem.InputSystem.Player.FastAttack.triggered)
+            TryAttack(leftMouseButtonAttackType);
+
+        if (_inputSystem.InputSystem.Player.StrongAttack.triggered)
+            TryAttack(rightMouseButtonAttackType);
     }
 
-    public bool CanAttack() => _colliderManager.HasWeapon && weaponPlayer.activeSelf;
 
-    private Vector2 CheckStandardAttackDirection(AttackDirection direction)
+    private void TryAttack(AttackType attackType)
     {
-        switch (direction)
-        {
-            case AttackDirection.Up:
-                return Vector2.up;
-
-            case AttackDirection.Down:
-                return Vector2.down;
-
-            case AttackDirection.Left:
-                return Vector2.left;
-
-            case AttackDirection.Right:
-                return Vector2.right;
-
-            default: return Vector2.up;
-        }
-    }
-
-    private void Attack(AttackType attackType)
-    {
-        if (CanAttack())
-        {
-            weaponPlayer.SetActive(false);
-            Vector2 attackDirection = _movementController.GetInputDirection();
-            if (attackDirection == Vector2.zero) attackDirection = CheckStandardAttackDirection(standardAttackDirection);
-            // Default attack direction if player is not moving
-
-            // MODIFICA 2: spostato OnAttack?.Invoke() PRIMA di FastAttack/StrongAttack.
-            // Motivo: OnAttack avvia AttackCoroutine in WeaponThrowController, che abilita
-            // il collider. Se la forza veniva applicata prima, l'arma partiva già in volo
-            // con il collider ancora spento, mancando le collisioni (visibile soprattutto
-            // al primo lancio quando l'arma parte da ferma).
-            _colliderManager.StartCoroutine(_colliderManager.AttackCoroutine(attackType));
-            _colliderManager.SetWeapon(false);
-            OnAttack?.Invoke();
-
-            switch (attackType)
-            {
-                case AttackType.Fast:
-                    FastAttack(attackDirection);
-                    Debug.Log("Player attacks with weapon = fast!");
-                    break;
-                case AttackType.Strong:
-                    StrongAttack(attackDirection);
-                    Debug.Log("Player attacks with weapon = strong!");
-                    break;
-                default:
-                    Debug.LogWarning("Unknown attack type!");
-                    break;
-            }
-        }
-        else
+        if (!CanAttack())
         {
             Debug.Log("Player cannot attack without a weapon!");
+            return;
         }
-    }
-    private void FastAttack(Vector2 attackDir)
-    {
-        weaponThrow.SetActive(true);
-        weaponThrow_Fast.enabled = true;
-        weaponThrow_Strong.enabled = false;
-        weaponThrow.GetComponent<Rigidbody2D>().AddForce(attackDir * attackForce_Fast, attackForceMode_Fast);
+        Vector2 direction = (_movementController.ControlScheme == ControlScheme.Mouse)
+        ? _movementController.GetMouseDirection()
+        : _movementController.GetInputDirection();
+
+        if (direction == Vector2.zero && _movementController.ControlScheme == ControlScheme.WASD)
+            direction = GetStandardDirection();
+
+        // 1. Aggiorna lo stato: player non ha più l'arma, WeaponPlayer disattivato.
+        weaponStateManager.ThrowWeapon();
+
+        // 2. Attiva il tipo corretto e applica la forza.
+        //    SetActive(true) su weaponThrowObject triggera OnEnable su WeaponThrowController,
+        //    che posiziona l'arma e abilita il collider. Nessun evento necessario.
+        switch (attackType)
+        {
+            case AttackType.Fast:
+                LaunchFast(direction);
+                break;
+            case AttackType.Strong:
+                LaunchStrong(direction);
+                break;
+        }
+
+        // 3. Disabilita temporaneamente la collisione player/arma.
+        colliderManager.StartAttackCooldown(attackType);
     }
 
-    private void StrongAttack(Vector2 attackDir)
+    private void LaunchFast(Vector2 direction)
     {
-        weaponThrow.SetActive(true);
-        weaponThrow_Fast.enabled = false;
-        weaponThrow_Strong.enabled = true;
-        weaponThrow.GetComponent<Rigidbody2D>().AddForce(attackDir * attackForce_Strong, attackForceMode_Strong);
+        weaponThrowObject.SetActive(true);  // → OnEnable su WeaponThrowController
+        _weaponThrow_Fast.enabled = true;
+        _weaponThrow_Strong.enabled = false;
+        _weaponRb.AddForce(direction * attackForce_Fast, attackForceMode_Fast);
+        Debug.Log("Player attacks: Fast!");
+    }
+
+    private void LaunchStrong(Vector2 direction)
+    {
+        weaponThrowObject.SetActive(true);  // → OnEnable su WeaponThrowController
+        _weaponThrow_Fast.enabled = false;
+        _weaponThrow_Strong.enabled = true;
+        _weaponRb.AddForce(direction * attackForce_Strong, attackForceMode_Strong);
+        Debug.Log("Player attacks: Strong!");
+    }
+
+    // PRIMA: switch/case con return. Ora expression switch (C# 8), più conciso.
+    private Vector2 GetStandardDirection()
+    {
+        return standardAttackDirection switch
+        {
+            AttackDirection.Up => Vector2.up,
+            AttackDirection.Down => Vector2.down,
+            AttackDirection.Left => Vector2.left,
+            AttackDirection.Right => Vector2.right,
+            _ => Vector2.up
+        };
     }
 }
 
-public enum AttackDirection
+public enum AttackDirection { Up, Down, Left, Right }
+public enum AttackType { Fast, Strong }
+public enum ControlScheme
 {
-    Up,
-    Down,
-    Left,
-    Right
-}
-
-public enum AttackType
-{
-    Fast,
-    Strong
+    WASD,
+    Mouse,
 }

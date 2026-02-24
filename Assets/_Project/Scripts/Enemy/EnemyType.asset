@@ -14,11 +14,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemySO
   damage: 1
   health: 1
-  DetectionRadius: 3
   moveSpeed: 1
+  rotationSpeed: 70
+  DetectionRadius: 1.5
   timeToForgetPlayer: 5
   ThingsEnemyConsiderPlayer:
     serializedVersion: 2
     m_Bits: 8
+  ThingsThatCanBlockEnemyView:
+    serializedVersion: 2
+    m_Bits: 0
   isFasterWhenChasing: 1
   chasingSpeedMultiplier: 1.5
+  damageRadius: 1
+  timeForDamage: 1
+  lineRendererPoints: 10
+  viewAngle: 90
+  viewRadius: 3.15
+  lineRendererWidth: 0.15
+  hasLineOfSight: 1
