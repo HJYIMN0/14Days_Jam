@@ -14,6 +14,7 @@ public class EnemySO : ScriptableObject
     public float timeToForgetPlayer = 5f;
     public LayerMask ThingsEnemyConsiderPlayer;
     public LayerMask ThingsThatCanBlockEnemyView;
+    public bool hasRoute;
 
     [Header("Speed increments stats")]
     public bool isFasterWhenChasing = false;

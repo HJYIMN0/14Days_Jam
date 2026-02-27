@@ -28,6 +28,9 @@ public class WeaponStateManager : MonoBehaviour
     [SerializeField] private GameObject weaponPlayerObject;
     [SerializeField] private GameObject weaponThrowObject;
 
+    public GameObject WeaponPlayerObj => weaponPlayerObject;
+    public GameObject WeaponThrowObj => weaponThrowObject;
+
     /// <summary>
     /// Unica fonte di verità: se true, il player possiede l'arma.
     /// Rimpiazza PlayerColliderManager.HasWeapon e weaponPlayer.activeSelf.

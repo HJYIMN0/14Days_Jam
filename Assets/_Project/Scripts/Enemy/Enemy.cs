@@ -1,9 +1,18 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
     [SerializeField] private EnemySO enemySO;
+
+    // MODIFICA: routePos ora usa List<Transform> invece di List<Vector2>, come richiesto.
+    // _startPos rimane Vector2 ed è garantita all'indice 0 di _resolvedRoute (lista interna privata).
+    [SerializeField] private List<Transform> routePos;
+    private List<Vector2> _resolvedRoute;
+
+    private int currentRoute;
+
     public bool isIntrestedInPlayer = false;
     private EnemyState _currentEmenyState = EnemyState.Idle;
     public EnemySO EnemySO => enemySO;
@@ -28,11 +37,30 @@ public class Enemy : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+
+        if (enemySO.hasRoute && routePos.Count <= 0)
+        {
+            Debug.LogWarning($"If this enemy ({gameObject.name}) was supposed to follow a path, you forgot to assign it");
+            Debug.Log($"Assigning hasPath = false to {enemySO}");
+        }
     }
 
     private void Start()
     {
         _startPos = transform.position;
+        currentRoute = 0;
+
+        // MODIFICA: Costruzione di _resolvedRoute con _startPos (Vector2) forzata
+        // all'indice 0, seguita dalle posizioni dei Transform assegnati in inspector.
+        _resolvedRoute = new List<Vector2>();
+        _resolvedRoute.Add(_startPos);
+        foreach (Transform t in routePos)
+        {
+            if (t != null)
+                _resolvedRoute.Add(t.position);
+            else
+                Debug.LogWarning($"[{gameObject.name}] Un waypoint in routePos è null e verrà ignorato.");
+        }
     }
 
     protected virtual void FixedUpdate()
@@ -42,7 +70,6 @@ public class Enemy : MonoBehaviour
 
     protected virtual void EvaluateEnemyBehaviour(EnemyState enemyState)
     {
-        // Modifica: Esecuzione singola del calcolo fisico e memorizzazione del risultato
         bool isPlayerDetected = IsPlayerInDetectionRadius();
 
         switch (enemyState)
@@ -52,6 +79,23 @@ public class Enemy : MonoBehaviour
                 {
                     SetEnemyState(EnemyState.Chasing);
                 }
+                // CORREZIONE BUG PATHING: hasRoute ora ha la priorità rispetto al ritorno a
+                // _startPos. In precedenza Distance(_startPos) > 0.5f veniva valutato prima,
+                // interrompendo la pattuglia ogni volta che il nemico era lontano dall'origine.
+                else if (enemySO.hasRoute)
+                {
+                    // CORREZIONE BUG PATHING: il controllo waypoint e il movimento sono ora
+                    // continui ogni FixedUpdate. In precedenza Move() veniva chiamato solo nel
+                    // singolo frame in cui distance < 0.5f, causando lo stop immediato tra un
+                    // waypoint e l'altro.
+                    if (Vector2.Distance(transform.position, _resolvedRoute[currentRoute]) < 0.5f)
+                    {
+                        currentRoute++;
+                        if (currentRoute >= _resolvedRoute.Count) currentRoute = 0;
+                    }
+                    Move(_resolvedRoute[currentRoute]);
+                    RotateTowards(_resolvedRoute[currentRoute], enemySO.rotationSpeed);
+                }
                 else if (Vector2.Distance(transform.position, _startPos) > 0.5f)
                 {
                     Move(_startPos);
@@ -59,17 +103,17 @@ public class Enemy : MonoBehaviour
                 }
                 else
                 {
-                    // Modifica: Azzeramento della velocità per impedire il jittering sul posto
                     _rb.linearVelocity = Vector2.zero;
                 }
                 break;
 
             case EnemyState.Chasing:
+                currentRoute = 0;
                 if (!isPlayerDetected && !isIntrestedInPlayer)
                 {
                     SetEnemyState(EnemyState.Idle);
-                    _rb.linearVelocity = Vector2.zero; // Ferma il nemico istantaneamente
-                    return; // Interrompe il blocco per impedire l'esecuzione di Move() sottostante
+                    _rb.linearVelocity = Vector2.zero;
+                    return;
                 }
                 else if (!isPlayerDetected && isIntrestedInPlayer)
                 {
@@ -142,7 +186,6 @@ public class Enemy : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Modifica: Verifica dell'esistenza del componente prima di richiamarlo per evitare NullReferenceException
             if (collision.gameObject.TryGetComponent(out PlayerHealthManager healthManager))
             {
                 healthManager.TakeDamage(enemySO.damage);
@@ -152,14 +195,11 @@ public class Enemy : MonoBehaviour
 
     public void RotateTowards(Vector3 dir, float rotationSpeed)
     {
-        // Calcolo del vettore verso il punto bersaglio 'dir'
         Vector2 direction = (dir - transform.position).normalized;
 
-        // Calcolo dell'angolo target. 
         // NOTA: Mantenuto il -90f essenziale se il tuo sprite guarda nativamente verso l'alto.
         float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
 
-        // Creazione del Quaternione bersaglio finale
         Quaternion targetRotation = Quaternion.Euler(0, 0, targetAngle);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
     }

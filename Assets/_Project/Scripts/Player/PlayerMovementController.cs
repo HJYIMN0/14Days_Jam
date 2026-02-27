@@ -73,4 +73,4 @@ public class PlayerMovementController : MonoBehaviour
         Vector2 direction = _movementInput.normalized;
         _playerRb.linearVelocity = direction * moveSpeed;
     }
-}
+}   

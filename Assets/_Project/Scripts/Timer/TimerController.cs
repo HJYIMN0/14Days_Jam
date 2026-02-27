@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class TimerController : MonoBehaviour
 {
-    [SerializeField] private WeaponStateManager _weaponStateManager;
     [SerializeField] private TextMeshProUGUI _timerText;
     [SerializeField] private float timeLimit = 5f;
     [SerializeField] private WeaponStateManager weaponStateManager;
@@ -13,11 +12,11 @@ public class TimerController : MonoBehaviour
 
     private void Start()
     {
-        _weaponStateManager.OnWeaponPickup += ResetTimer;
+        weaponStateManager.OnWeaponPickup += ResetTimer;
     }
     private void Update()
     {
-        if (!_weaponStateManager.HasWeapon)
+        if (!weaponStateManager.HasWeapon)
         {
             timer -= Time.deltaTime;
             if (timer <= 0)
