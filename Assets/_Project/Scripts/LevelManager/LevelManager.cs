@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class LevelManager : MonoBehaviour
 {
     [SerializeField] private bool needsAllEnemiesDefeatedToExit = true;
+    [SerializeField] private GameObject winCanvaGo;
 
     public List<GameObject> Enemies { get; private set; }   
     
@@ -12,14 +13,20 @@ public class LevelManager : MonoBehaviour
 
     private void Start()
     {
-        foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy"))
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        Enemies = new List<GameObject>();
+        foreach (GameObject enemy in enemies) 
         {
+            Debug.Log("Adding " + enemy.name);
             Enemies.Add(enemy);
         }
+
+        winCanvaGo.SetActive(false);
     }
 
     public void RemoveEnemyFromList(GameObject enemy)
     {
+        Debug.Log("Function Remove Enemy called");
         if (Enemies.Count > 0)
         {
             foreach (GameObject enemyInList in Enemies)
@@ -27,6 +34,7 @@ public class LevelManager : MonoBehaviour
                 if (enemy == enemyInList)
                 {
                     Enemies.Remove(enemy);
+                    Debug.Log(enemy.name + " removed!");
                     break;
                 }
             }
@@ -37,6 +45,7 @@ public class LevelManager : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
+            Debug.Log("Player found!");
             if (!needsAllEnemiesDefeatedToExit)
             {
                 Win();
@@ -53,6 +62,7 @@ public class LevelManager : MonoBehaviour
     public void Win()
     {
         Debug.Log("Player has reached the exit! Level complete!");
+        winCanvaGo.SetActive(true);
     }
 
 }

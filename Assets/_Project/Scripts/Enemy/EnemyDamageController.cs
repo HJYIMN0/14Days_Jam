@@ -9,12 +9,15 @@ public class EnemyDamageController : MonoBehaviour
         if (_enemy == null)
         _enemy = GetComponent<Enemy>();
     }
-    private void OnTriggerEnter2D(Collider2D collision)
+
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("PlayerWeapon"))
+        if (collision.gameObject.CompareTag("Player"))
         {
-            Debug.Log("Enemy hit the player!");
+            Debug.Log("COllided!");
+            collision.gameObject.GetComponent<HealthManager>()?.TakeDamage(_enemy.EnemySO.damage);
         }
+
     }
 
     private void OnDrawGizmos()

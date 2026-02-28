@@ -145,7 +145,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c02355f1d712e143b3b008cb35e017f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
-  enemySO: {fileID: 11400000, guid: b1aa118e16f19d94a992c074ca64eada, type: 2}
+  enemySO: {fileID: 11400000, guid: 4146cccddaecdfa48bbc0c04f382e235, type: 2}
+  routePos:
+  - {fileID: 0}
+  - {fileID: 0}
   isIntrestedInPlayer: 0
 --- !u!114 &7986241186651718848
 MonoBehaviour:
@@ -216,7 +219,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 8bd8e217349d4414388ad94749538316, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

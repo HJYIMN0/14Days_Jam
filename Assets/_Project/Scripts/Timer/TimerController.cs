@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TimerController : MonoBehaviour
 {
@@ -13,8 +14,11 @@ public class TimerController : MonoBehaviour
     private void Start()
     {
         weaponStateManager.OnWeaponPickup += ResetTimer;
+        timer = timeLimit;
+        _timerText.text = timer.ToString();
     }
-    private void Update()
+   
+    private void FixedUpdate()
     {
         if (!weaponStateManager.HasWeapon)
         {
@@ -23,6 +27,7 @@ public class TimerController : MonoBehaviour
             {
                 timer = 0;
                 Debug.Log("Time's up! Player lost the weapon.");
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             }
             _timerText.text = timer.ToString();
         }
