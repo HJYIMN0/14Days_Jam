@@ -1389,6 +1389,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3584081612250488061, guid: af16a8337feb24c499afe50328648f0a, type: 3}
+      propertyPath: winCanvaGo
+      value: 
+      objectReference: {fileID: 1917902118}
     - target: {fileID: 8093575421929172400, guid: af16a8337feb24c499afe50328648f0a, type: 3}
       propertyPath: m_Name
       value: WinningPlatform
